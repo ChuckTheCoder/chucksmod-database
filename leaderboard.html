@@ -5,25 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Global Leaderboard</title>
     <style>
-        /* 1. This stops padding from breaking the width! */
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
 
         body {
             margin: 0;
-            padding: 2vw; /* Uses screen percentage instead of pixels */
+            padding: 2vw 2vw 100px 2vw; 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #1a1a1a;
             color: white;
             overflow-y: auto;
-            overflow-x: hidden; /* Prevents side-scrolling */
+            overflow-x: hidden;
         }
 
         .header {
             text-align: center;
             font-weight: 900;
-            /* Shrinks to 16px on tiny screens, grows to 24px on big screens */
             font-size: clamp(16px, 5vw, 24px); 
             margin-bottom: 15px;
             color: #ffcc00;
@@ -36,11 +32,11 @@
             align-items: center;
             background-color: #2a2a2a;
             margin-bottom: 8px;
-            padding: 2vw 3vw; /* Flexible padding */
+            padding: 2vw 3vw;
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
             transition: transform 0.1s;
-            gap: 8px; /* Evenly spaces items without relying on margins */
+            gap: 8px;
         }
 
         .player-row:hover {
@@ -49,10 +45,9 @@
         }
 
         .rank {
-            /* Flexible font size */
             font-size: clamp(14px, 4vw, 18px);
             font-weight: bold;
-            min-width: 25px; /* Ensures double digits fit */
+            min-width: 25px;
             color: #888;
         }
 
@@ -61,14 +56,13 @@
         .rank-3 { color: #cd7f32; text-shadow: 0 0 5px rgba(205,127,50,0.5); }
 
         .pfp {
-            /* Scales the image down gracefully in tight spaces */
             width: clamp(24px, 8vw, 40px);
             height: clamp(24px, 8vw, 40px);
             border-radius: 50%;
             object-fit: cover;
             background-color: #444;
             border: 2px solid #555;
-            flex-shrink: 0; /* Prevents the image from getting squished into an oval */
+            flex-shrink: 0;
         }
 
         .username {
@@ -78,7 +72,7 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            min-width: 0; /* Forces flexbox to respect the ellipsis truncation */
+            min-width: 0;
         }
 
         .score {
@@ -86,7 +80,7 @@
             color: #4caf50;
             font-family: monospace;
             font-size: clamp(12px, 4vw, 18px);
-            flex-shrink: 0; /* Ensures the score never gets cut off */
+            flex-shrink: 0;
         }
 
         .loading {
@@ -96,6 +90,130 @@
             margin-top: 20px;
             font-size: clamp(12px, 4vw, 16px);
         }
+
+        /* --- MAJOR ORDER FOOTER CSS --- */
+        .mo-footer {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            background-color: #1a1a1a;
+            border-top: 2px solid #ffcc00;
+            padding: 10px 15px;
+            box-shadow: 0 -10px 20px rgba(0,0,0,0.9);
+            z-index: 100;
+        }
+
+        .mo-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 8px;
+        }
+
+        .mo-title {
+            font-size: clamp(12px, 3.5vw, 16px);
+            font-weight: 900;
+            color: #ffcc00;
+            text-transform: uppercase;
+            text-shadow: 0 0 8px rgba(255,204,0,0.4);
+        }
+
+        .mo-reward {
+            font-size: clamp(10px, 3vw, 13px);
+            font-weight: bold;
+            color: #00e5ff; 
+            text-transform: uppercase;
+            text-shadow: 0 0 5px rgba(0,229,255,0.5);
+            background: rgba(0, 229, 255, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid rgba(0,229,255,0.3);
+        }
+
+        .mo-progress-bar-bg {
+            width: 100%;
+            height: 16px;
+            background-color: #0a0a0a;
+            border-radius: 8px;
+            overflow: hidden; /* Keeps everything nicely inside the rounded edges */
+            border: 1px solid #333;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.8);
+            margin-bottom: 6px;
+        }
+
+        .mo-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff8800, #ffcc00);
+            width: 0%; 
+            transition: width 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+            position: relative;
+        }
+
+        /* THE PARTICLES / STRIPES OVERLAY (Fixed the bug here!) */
+        .mo-progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0; /* Strictly clipped to the bar */
+            background: repeating-linear-gradient(
+                -45deg,
+                rgba(255, 255, 255, 0.25),
+                rgba(255, 255, 255, 0.25) 10px,
+                transparent 10px,
+                transparent 20px
+            );
+            background-size: 28px 28px;
+            animation: energyFlow 1s linear infinite;
+        }
+
+        /* NEW: THE FIZZING SPARKLE TIP */
+        .mo-progress-fill::before {
+            content: '';
+            position: absolute;
+            right: 0; /* Locks it to the moving end of the bar */
+            top: 50%;
+            transform: translateY(-50%);
+            width: 6px;
+            height: 14px;
+            background-color: #ffffff;
+            border-radius: 50%;
+            z-index: 10;
+            /* Using wild, animated shadows to look like crackling sparks */
+            animation: fizzleSparks 0.15s infinite alternate;
+        }
+
+        @keyframes energyFlow {
+            0% { background-position: 0 0; }
+            100% { background-position: 28px 0; }
+        }
+
+        @keyframes fizzleSparks {
+            0% {
+                opacity: 0.8;
+                box-shadow: 
+                    0 0 8px 2px #ffffff,
+                    -2px -5px 3px #ffcc00,
+                    2px 6px 4px #ff8800,
+                    0 0 15px 5px #ffcc00;
+            }
+            100% {
+                opacity: 1;
+                box-shadow: 
+                    0 0 12px 4px #ffffff,
+                    3px -6px 4px #ff8800,
+                    -1px 5px 2px #ffcc00,
+                    0 0 25px 8px #ffcc00;
+            }
+        }
+
+        .mo-stats {
+            font-size: clamp(10px, 3vw, 12px);
+            color: #ccc;
+            display: flex;
+            justify-content: space-between;
+            font-family: monospace;
+            font-weight: bold;
+        }
+        
+        .mo-percentage { color: #ffcc00; }
     </style>
 </head>
 <body>
@@ -103,6 +221,20 @@
     <div class="header">🏆 Top Players</div>
     <div id="leaderboard-list">
         <div class="loading">Fetching data...</div>
+    </div>
+
+    <div class="mo-footer" id="mo-container" style="display: none;">
+        <div class="mo-header-row">
+            <div class="mo-title" id="mo-name">MAJOR ORDER: STANDBY</div>
+            <div class="mo-reward" id="mo-reward-text">REWARD: ???</div>
+        </div>
+        <div class="mo-progress-bar-bg">
+            <div class="mo-progress-fill" id="mo-fill"></div>
+        </div>
+        <div class="mo-stats">
+            <span id="mo-numbers">0 / 0</span>
+            <span class="mo-percentage" id="mo-percent-text">0%</span>
+        </div>
     </div>
 
     <script>
@@ -114,66 +246,86 @@
         const leaderboardContainer = document.getElementById('leaderboard-list');
         const pfpCache = {};
 
+        const dbHeaders = {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+        };
+
         async function loadLeaderboard() {
             try {
-                const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/fetch_global_leaderboard`, {
-                    method: 'POST', 
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'apikey': SUPABASE_ANON_KEY,
-                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-                    }
-                });
+                const [leaderboardRes, moRes] = await Promise.all([
+                    fetch(`${SUPABASE_URL}/rest/v1/rpc/fetch_global_leaderboard`, { method: 'POST', headers: dbHeaders }),
+                    fetch(`${SUPABASE_URL}/rest/v1/rpc/fetch_major_order_status`, { method: 'POST', headers: dbHeaders })
+                ]);
 
-                if (!response.ok) throw new Error('Database error');
-                const players = await response.json();
+                if (!leaderboardRes.ok || !moRes.ok) throw new Error('Database error');
+                
+                const players = await leaderboardRes.json();
+                const moData = await moRes.json();
 
+                // 1. Update Leaderboard
                 if (players.length === 0) {
                     leaderboardContainer.innerHTML = '<div class="loading">No players found!</div>';
-                    return;
+                } else {
+                    const currentScroll = document.documentElement.scrollTop || document.body.scrollTop;
+                    let newHTML = '';
+                    
+                    players.forEach((player, index) => {
+                        const rank = index + 1;
+                        let rankClass = '';
+                        if (rank === 1) rankClass = 'rank-1';
+                        if (rank === 2) rankClass = 'rank-2';
+                        if (rank === 3) rankClass = 'rank-3';
+
+                        let imageSource = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='; 
+                        if (pfpCache[player.username]) {
+                            imageSource = pfpCache[player.username];
+                        }
+
+                        newHTML += `
+                            <div class="player-row">
+                                <div class="rank ${rankClass}">#${rank}</div>
+                                <img src="${imageSource}" class="pfp" id="pfp-${player.username}" />
+                                <div class="username">${player.username}</div>
+                                <div class="score">${player.total_clicks.toLocaleString()}</div>
+                            </div>
+                        `;
+                    });
+
+                    leaderboardContainer.innerHTML = newHTML;
+                    document.documentElement.scrollTop = currentScroll;
+                    document.body.scrollTop = currentScroll;
+
+                    players.forEach(player => {
+                        if (!pfpCache[player.username]) {
+                            fetchCodeTorchPFP(player.username);
+                        }
+                    });
                 }
 
-                // Save the player's current scroll position so the refresh doesn't jump them to the top
-                const currentScroll = document.documentElement.scrollTop || document.body.scrollTop;
-
-                let newHTML = '';
-                
-                players.forEach((player, index) => {
-                    const rank = index + 1;
-                    let rankClass = '';
-                    if (rank === 1) rankClass = 'rank-1';
-                    if (rank === 2) rankClass = 'rank-2';
-                    if (rank === 3) rankClass = 'rank-3';
-
-                    let imageSource = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='; 
-                    if (pfpCache[player.username]) {
-                        imageSource = pfpCache[player.username];
-                    }
-
-                    newHTML += `
-                        <div class="player-row">
-                            <div class="rank ${rankClass}">#${rank}</div>
-                            <img src="${imageSource}" class="pfp" id="pfp-${player.username}" />
-                            <div class="username">${player.username}</div>
-                            <div class="score">${player.total_clicks.toLocaleString()}</div>
-                        </div>
-                    `;
-                });
-
-                leaderboardContainer.innerHTML = newHTML;
-
-                // Restore scroll position seamlessly
-                document.documentElement.scrollTop = currentScroll;
-                document.body.scrollTop = currentScroll;
-
-                players.forEach(player => {
-                    if (!pfpCache[player.username]) {
-                        fetchCodeTorchPFP(player.username);
-                    }
-                });
+                // 2. Update Major Order Footer
+                const moContainer = document.getElementById('mo-container');
+                if (moData && moData.active) {
+                    moContainer.style.display = 'block'; 
+                    document.getElementById('mo-name').innerText = `${moData.name}`;
+                    document.getElementById('mo-reward-text').innerText = `REWARD: ${moData.reward}`;
+                    
+                    let rawPercentage = (moData.progress / moData.goal) * 100;
+                    if (rawPercentage > 100) rawPercentage = 100;
+                    
+                    let displayPercentage = rawPercentage.toFixed(1);
+                    if (displayPercentage.endsWith('.0')) displayPercentage = Math.round(rawPercentage);
+                    
+                    document.getElementById('mo-fill').style.width = `${rawPercentage}%`;
+                    document.getElementById('mo-numbers').innerText = `${moData.progress.toLocaleString()} / ${moData.goal.toLocaleString()} CLICKS`;
+                    document.getElementById('mo-percent-text').innerText = `${displayPercentage}%`;
+                } else {
+                    moContainer.style.display = 'none';
+                }
 
             } catch (error) {
-                console.error('Error fetching leaderboard:', error);
+                console.error('Error fetching data:', error);
             }
         }
 
@@ -195,7 +347,6 @@
             }
         }
 
-        // Run immediately, then every 10 seconds
         loadLeaderboard();
         setInterval(loadLeaderboard, 10000); 
     </script>
