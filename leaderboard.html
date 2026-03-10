@@ -134,7 +134,7 @@
             height: 16px;
             background-color: #0a0a0a;
             border-radius: 8px;
-            overflow: hidden; /* Keeps everything nicely inside the rounded edges */
+            overflow: hidden;
             border: 1px solid #333;
             box-shadow: inset 0 2px 5px rgba(0,0,0,0.8);
             margin-bottom: 6px;
@@ -148,11 +148,10 @@
             position: relative;
         }
 
-        /* THE PARTICLES / STRIPES OVERLAY (Fixed the bug here!) */
         .mo-progress-fill::after {
             content: '';
             position: absolute;
-            top: 0; left: 0; bottom: 0; right: 0; /* Strictly clipped to the bar */
+            top: 0; left: 0; bottom: 0; right: 0;
             background: repeating-linear-gradient(
                 -45deg,
                 rgba(255, 255, 255, 0.25),
@@ -164,11 +163,10 @@
             animation: energyFlow 1s linear infinite;
         }
 
-        /* NEW: THE FIZZING SPARKLE TIP */
         .mo-progress-fill::before {
             content: '';
             position: absolute;
-            right: 0; /* Locks it to the moving end of the bar */
+            right: 0; 
             top: 50%;
             transform: translateY(-50%);
             width: 6px;
@@ -176,7 +174,6 @@
             background-color: #ffffff;
             border-radius: 50%;
             z-index: 10;
-            /* Using wild, animated shadows to look like crackling sparks */
             animation: fizzleSparks 0.15s infinite alternate;
         }
 
@@ -188,19 +185,11 @@
         @keyframes fizzleSparks {
             0% {
                 opacity: 0.8;
-                box-shadow: 
-                    0 0 8px 2px #ffffff,
-                    -2px -5px 3px #ffcc00,
-                    2px 6px 4px #ff8800,
-                    0 0 15px 5px #ffcc00;
+                box-shadow: 0 0 8px 2px #ffffff, -2px -5px 3px #ffcc00, 2px 6px 4px #ff8800, 0 0 15px 5px #ffcc00;
             }
             100% {
                 opacity: 1;
-                box-shadow: 
-                    0 0 12px 4px #ffffff,
-                    3px -6px 4px #ff8800,
-                    -1px 5px 2px #ffcc00,
-                    0 0 25px 8px #ffcc00;
+                box-shadow: 0 0 12px 4px #ffffff, 3px -6px 4px #ff8800, -1px 5px 2px #ffcc00, 0 0 25px 8px #ffcc00;
             }
         }
 
@@ -214,6 +203,7 @@
         }
         
         .mo-percentage { color: #ffcc00; }
+        .mo-completed-text { color: #4caf50; font-weight: 900; }
     </style>
 </head>
 <body>
@@ -233,15 +223,13 @@
         </div>
         <div class="mo-stats">
             <span id="mo-numbers">0 / 0</span>
-            <span class="mo-percentage" id="mo-percent-text">0%</span>
+            <span id="mo-percent-text" class="mo-percentage">0%</span>
         </div>
     </div>
 
     <script>
-        // --- PUT YOUR SUPABASE INFO HERE ---
         const SUPABASE_URL = 'https://lriizufytmdvxwcyjtqz.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxyaWl6dWZ5dG1kdnh3Y3lqdHF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMzMzOTMsImV4cCI6MjA4NzgwOTM5M30.dDqU0McuLngEptd7vU3rqcE06qTKxDql4h44hFSGwBc';
-        // -----------------------------------
 
         const leaderboardContainer = document.getElementById('leaderboard-list');
         const pfpCache = {};
@@ -264,7 +252,6 @@
                 const players = await leaderboardRes.json();
                 const moData = await moRes.json();
 
-                // 1. Update Leaderboard
                 if (players.length === 0) {
                     leaderboardContainer.innerHTML = '<div class="loading">No players found!</div>';
                 } else {
@@ -304,9 +291,9 @@
                     });
                 }
 
-                // 2. Update Major Order Footer
                 const moContainer = document.getElementById('mo-container');
-                if (moData && moData.active) {
+                // CHANGE: Now shows as long as a name exists, even if not active
+                if (moData && moData.name && moData.name !== 'None') {
                     moContainer.style.display = 'block'; 
                     document.getElementById('mo-name').innerText = `${moData.name}`;
                     document.getElementById('mo-reward-text').innerText = `REWARD: ${moData.reward}`;
@@ -314,12 +301,19 @@
                     let rawPercentage = (moData.progress / moData.goal) * 100;
                     if (rawPercentage > 100) rawPercentage = 100;
                     
-                    let displayPercentage = rawPercentage.toFixed(1);
-                    if (displayPercentage.endsWith('.0')) displayPercentage = Math.round(rawPercentage);
-                    
                     document.getElementById('mo-fill').style.width = `${rawPercentage}%`;
                     document.getElementById('mo-numbers').innerText = `${moData.progress.toLocaleString()} / ${moData.goal.toLocaleString()} CLICKS`;
-                    document.getElementById('mo-percent-text').innerText = `${displayPercentage}%`;
+                    
+                    const percentEl = document.getElementById('mo-percent-text');
+                    if (rawPercentage >= 100) {
+                        percentEl.innerText = "MISSION COMPLETED";
+                        percentEl.className = "mo-completed-text";
+                    } else {
+                        let displayPercentage = rawPercentage.toFixed(1);
+                        if (displayPercentage.endsWith('.0')) displayPercentage = Math.round(rawPercentage);
+                        percentEl.innerText = `${displayPercentage}%`;
+                        percentEl.className = "mo-percentage";
+                    }
                 } else {
                     moContainer.style.display = 'none';
                 }
@@ -352,3 +346,4 @@
     </script>
 </body>
 </html>
+
