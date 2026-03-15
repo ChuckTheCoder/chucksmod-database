@@ -346,12 +346,12 @@
                         if (currentLevel >= 16) { tierClass = 'tier-5'; particleColor = 'rgba(255,0,255,0.35)'; }
 
                         newHTML += `
-                            <div class="player-row ${tierClass}" onclick="openProfile('${player.username}')" style="--p-color: ${particleColor};">
+                            <div class="player-row ${tierClass}" onclick="openProfile('${player.username.replace(/'/g, "\\'")}')" style="--p-color: ${particleColor};">
                                 <div class="particles"></div>
                                 <div class="rank ${rankClass}">#${rank}</div>
                                 
                                 <div class="pfp-wrapper" style="margin-bottom:0; padding:3px;">
-                                    <img src="${imageSource}" class="row-pfp" id="pfp-${player.username}" />
+                                    <img src="${imageSource}" class="row-pfp" data-user="${player.username.replace(/"/g, '&quot;')}" />
                                 </div>
                                 
                                 <div class="name-col">
@@ -398,12 +398,14 @@
 
         async function fetchCodeTorchPFP(username) {
             try {
-                const res = await fetch(`https://api.codetorch.net/v1/users/${username}`);
+                // Encode URI handles spaces, hashes, and symbols in the fetch URL
+                const res = await fetch(`https://api.codetorch.net/v1/users/${encodeURIComponent(username)}`);
                 if (res.ok) {
                     const data = await res.json();
                     if (data.pfp) {
                         pfpCache[username] = data.pfp;
-                        const imgElements = document.querySelectorAll(`#pfp-${username}`);
+                        // Use data attribute to safely find images even with spaces in names
+                        const imgElements = document.querySelectorAll(`img[data-user="${username.replace(/"/g, '\\"')}"]`);
                         imgElements.forEach(el => el.src = data.pfp);
                     }
                 }
@@ -477,11 +479,15 @@
                         else playText = `${s}s`;
                     }
 
+                    // T-COIN EXTRACTED FROM PAYLOAD
+                    const cryptoOwned = p.crypto_balance || 0;
+
                     document.getElementById('modal-stats').innerHTML = `
                         <div class="stat-box"><div class="stat-label">Total Clicks</div><div class="stat-value">${totalClicks.toLocaleString()}</div></div>
                         <div class="stat-box"><div class="stat-label">Currency</div><div class="stat-value gold">${(p.balance || 0).toLocaleString()}</div></div>
                         <div class="stat-box"><div class="stat-label">Playtime</div><div class="stat-value blue">${playText}</div></div>
                         <div class="stat-box"><div class="stat-label">Mission Contrib</div><div class="stat-value">${(p.current_mission_contribution || 0).toLocaleString()}</div></div>
+                        <div class="stat-box" style="grid-column: span 2;"><div class="stat-label">T-COIN Holdings</div><div class="stat-value" style="color: #00e5ff;">${Number(cryptoOwned).toLocaleString(undefined, { maximumFractionDigits: 4 })}</div></div>
                     `;
                 } else { document.getElementById('modal-stats').innerHTML = '<div class="loading" style="grid-column: span 2;">Player not found.</div>'; }
 
