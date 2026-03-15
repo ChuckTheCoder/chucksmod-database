@@ -233,10 +233,15 @@
                     if (walletRes.ok) {
                         const walletData = await walletRes.json();
                         const cryptoOwned = walletData.crypto_balance || 0;
-                        const fiatValue = cryptoOwned * latestPrice;
+                        
+                        // FIX: Changed to the true liquidation value (Spot Price minus Curve Penalty)
+                        const fiatValue = (cryptoOwned * latestPrice) - (0.05 * (cryptoOwned * cryptoOwned));
 
                         document.getElementById('wallet-crypto').innerText = cryptoOwned.toLocaleString(undefined, { maximumFractionDigits: 4 });
-                        document.getElementById('wallet-fiat-value').innerText = '$' + fiatValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        
+                        // Prevent displaying negative numbers just in case of weird math
+                        const safeFiatValue = fiatValue > 0 ? fiatValue : 0;
+                        document.getElementById('wallet-fiat-value').innerText = '$' + safeFiatValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                     }
                 }
 
