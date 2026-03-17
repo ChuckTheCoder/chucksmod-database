@@ -81,6 +81,8 @@
 
         .market-info { display: flex; align-items: center; gap: 15px; }
 
+        .price-group { display: flex; align-items: baseline; gap: 10px; }
+
         .market-title {
             font-size: clamp(12px, 3.5vw, 16px); 
             font-weight: bold;
@@ -95,6 +97,20 @@
             font-weight: bold;
             color: white;
         }
+
+        /* --- NEW: PERCENTAGE BADGE CSS --- */
+        .price-change {
+            font-size: clamp(10px, 3vw, 14px);
+            font-family: monospace;
+            font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+        }
+        .positive { color: #4caf50; background: rgba(76, 175, 80, 0.15); }
+        .negative { color: #f44336; background: rgba(244, 67, 54, 0.15); }
+        .neutral { color: #888; background: rgba(136, 136, 136, 0.15); }
 
         .history-tabs {
             display: flex;
@@ -161,7 +177,10 @@
     <div class="header-container">
         <div class="market-info">
             <div class="market-title"><span class="status-dot"></span> GLOBAL MARKET</div>
-            <div class="current-price" id="live-price">$0.00 / T-COIN</div>
+            <div class="price-group">
+                <div class="current-price" id="live-price">$0.00 / T-COIN</div>
+                <div id="price-change" class="price-change neutral">0.00%</div>
+            </div>
         </div>
         
         <div class="history-tabs">
@@ -194,7 +213,6 @@
             document.getElementById('wallet-user').innerText = targetUsername.toUpperCase() + "'S PORTFOLIO";
         }
 
-        // --- CHART SETUP (EXACTLY AS ORIGINAL) ---
         const ctx = document.getElementById('cryptoChart').getContext('2d');
         let gradient = ctx.createLinearGradient(0, 0, 0, 400);
         gradient.addColorStop(0, 'rgba(0, 229, 255, 0.4)');
@@ -237,7 +255,6 @@
             }
         });
 
-        // --- TIMEFRAME SWITCHER ---
         function setTimeframe(limit, btn) {
             currentLimit = limit;
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -245,10 +262,8 @@
             updateMarketData(); 
         }
 
-        // --- DATA FETCHING ---
         async function updateMarketData() {
             try {
-                // Fetching from _v2 endpoint
                 const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/fetch_crypto_history_v2`, { 
                     method: 'POST', 
                     headers: dbHeaders,
@@ -259,17 +274,35 @@
                 
                 const data = await res.json();
                 let latestPrice = 0;
+                let firstPrice = 0;
 
                 if (data && data.length > 0) {
                     const prices = data.map(tx => parseFloat(tx.price));
                     latestPrice = prices[prices.length - 1]; 
+                    firstPrice = prices[0]; // Get the oldest price in the current view
                     
                     cryptoChart.data.datasets[0].data = prices;
-                    // Dynamically size the blank labels array based on current tab's data length
                     cryptoChart.data.labels = Array(prices.length).fill(''); 
                     cryptoChart.update();
 
                     document.getElementById('live-price').innerText = '$' + latestPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' / T-COIN';
+
+                    // --- NEW: CALCULATE PERCENTAGE CHANGE ---
+                    const changeEl = document.getElementById('price-change');
+                    if (firstPrice > 0) {
+                        const percentChange = ((latestPrice - firstPrice) / firstPrice) * 100;
+                        
+                        if (percentChange > 0) {
+                            changeEl.innerText = '▲ ' + percentChange.toFixed(2) + '%';
+                            changeEl.className = 'price-change positive';
+                        } else if (percentChange < 0) {
+                            changeEl.innerText = '▼ ' + Math.abs(percentChange).toFixed(2) + '%';
+                            changeEl.className = 'price-change negative';
+                        } else {
+                            changeEl.innerText = '— 0.00%';
+                            changeEl.className = 'price-change neutral';
+                        }
+                    }
                 }
 
                 if (targetUsername && latestPrice > 0) {
@@ -282,7 +315,6 @@
                     if (walletRes.ok) {
                         const walletData = await walletRes.json();
                         const cryptoOwned = walletData.crypto_balance || 0;
-                        
                         const fiatValue = (cryptoOwned * latestPrice) - (0.05 * (cryptoOwned * cryptoOwned));
                         const safeFiatValue = fiatValue > 0 ? fiatValue : 0;
 
