@@ -69,7 +69,7 @@
 
         .tcoin-label { color: #888; font-size: 0.8em; margin-left: 4px; }
 
-        /* --- MARKET HEADER & TABS --- */
+        /* --- MARKET HEADER --- */
         .header-container {
             display: flex;
             justify-content: space-between;
@@ -98,7 +98,7 @@
             color: white;
         }
 
-        /* --- NEW: PERCENTAGE BADGE CSS --- */
+        /* --- PERCENTAGE BADGE CSS --- */
         .price-change {
             font-size: clamp(10px, 3vw, 14px);
             font-family: monospace;
@@ -111,6 +111,40 @@
         .positive { color: #4caf50; background: rgba(76, 175, 80, 0.15); }
         .negative { color: #f44336; background: rgba(244, 67, 54, 0.15); }
         .neutral { color: #888; background: rgba(136, 136, 136, 0.15); }
+
+        .status-dot {
+            display: inline-block; width: 8px; height: 8px;
+            background-color: #00e5ff; border-radius: 50%;
+            margin-right: 6px; box-shadow: 0 0 8px #00e5ff;
+            animation: pulse 1.5s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.5; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1.2); }
+        }
+
+        /* --- GRAPH AREA --- */
+        .chart-wrapper {
+            position: relative;
+            flex-grow: 1; 
+            width: 100%;
+            background-color: #222;
+            border-radius: 8px;
+            border: 1px solid #333;
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.5);
+            padding: 10px;
+            min-height: 0; 
+        }
+
+        /* --- FOOTER & TABS --- */
+        .footer-container {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 10px;
+            flex-shrink: 0;
+            padding: 0 5px;
+        }
 
         .history-tabs {
             display: flex;
@@ -137,31 +171,6 @@
             background: #00e5ff;
             color: #000;
         }
-
-        .status-dot {
-            display: inline-block; width: 8px; height: 8px;
-            background-color: #00e5ff; border-radius: 50%;
-            margin-right: 6px; box-shadow: 0 0 8px #00e5ff;
-            animation: pulse 1.5s infinite alternate;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 0.5; transform: scale(0.8); }
-            100% { opacity: 1; transform: scale(1.2); }
-        }
-
-        /* --- GRAPH AREA --- */
-        .chart-wrapper {
-            position: relative;
-            flex-grow: 1; 
-            width: 100%;
-            background-color: #222;
-            border-radius: 8px;
-            border: 1px solid #333;
-            box-shadow: inset 0 4px 10px rgba(0,0,0,0.5);
-            padding: 10px;
-            min-height: 0; 
-        }
     </style>
 </head>
 <body>
@@ -182,16 +191,18 @@
                 <div id="price-change" class="price-change neutral">0.00%</div>
             </div>
         </div>
-        
+    </div>
+
+    <div class="chart-wrapper">
+        <canvas id="cryptoChart"></canvas>
+    </div>
+
+    <div class="footer-container">
         <div class="history-tabs">
             <button class="tab-btn active" onclick="setTimeframe(50, this)">LIVE</button>
             <button class="tab-btn" onclick="setTimeframe(500, this)">1D</button>
             <button class="tab-btn" onclick="setTimeframe(5000, this)">ALL</button>
         </div>
-    </div>
-
-    <div class="chart-wrapper">
-        <canvas id="cryptoChart"></canvas>
     </div>
 
     <script>
@@ -279,7 +290,7 @@
                 if (data && data.length > 0) {
                     const prices = data.map(tx => parseFloat(tx.price));
                     latestPrice = prices[prices.length - 1]; 
-                    firstPrice = prices[0]; // Get the oldest price in the current view
+                    firstPrice = prices[0]; 
                     
                     cryptoChart.data.datasets[0].data = prices;
                     cryptoChart.data.labels = Array(prices.length).fill(''); 
@@ -287,7 +298,6 @@
 
                     document.getElementById('live-price').innerText = '$' + latestPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' / T-COIN';
 
-                    // --- NEW: CALCULATE PERCENTAGE CHANGE ---
                     const changeEl = document.getElementById('price-change');
                     if (firstPrice > 0) {
                         const percentChange = ((latestPrice - firstPrice) / firstPrice) * 100;
